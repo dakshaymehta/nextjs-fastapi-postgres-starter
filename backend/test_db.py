@@ -9,3 +9,6 @@ def test_connection():
 
 if __name__ == "__main__":
     test_connection()
+
+# This script is used to test the connection to the database.
+# I just created it for my own testing purposes.

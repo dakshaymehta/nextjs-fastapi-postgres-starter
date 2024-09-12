@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+
 interface Message {
   id: number;
   content: string;
@@ -16,19 +17,37 @@ export default function Chat() {
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Effect to fetch messages and initialize WebSocket
   useEffect(() => {
     fetchMessages();
     initializeWebSocket();
 
+    // Cleanup function to close WebSocket connection
     return () => {
       if (ws.current) ws.current.close();
     };
   }, [threadId]);
 
+  // Effect to scroll to bottom when messages change 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // We used useEffect here for a few important reasons here:
+  // 1. Side Effect: Scrolling is a side effect that affects something outside
+  //    of the component's state (the DOM), which is exactly what useEffect is for.
+  // 2. Dependency on State: We want to scroll when the messages change, so we
+  //    include messages in the dependency array. This ensures the effect runs
+  //    after every render where messages has changed.
+  // 3. Separation of Concerns: It keeps the scrolling logic separate from the
+  //    rendering logic, making the code more maintainable.
+  // 4. Performance: By using useEffect, we ensure that scrolling happens after
+  //    the DOM has been updated with the new messages, which is more efficient.
+  useEffect(() => { 
+    scrollToBottom();
+  }, [messages]);
+
+  // Initialize WebSocket connection to the backend
   const initializeWebSocket = () => {
     ws.current = new WebSocket('ws://localhost:8000/ws');
     ws.current.onmessage = (event) => {
@@ -37,10 +56,13 @@ export default function Chat() {
     };
   };
 
+  // Scroll to the bottom of the chat
+  // This ensures new messages are always visible
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Fetch messages from the server
   const fetchMessages = async () => {
     try {
       const response = await fetch(`http://localhost:8000/messages/${threadId}`);
@@ -51,6 +73,7 @@ export default function Chat() {
     }
   };
 
+  // Send a new message
   const sendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -64,14 +87,17 @@ export default function Chat() {
       setInputMessage('');
       fetchMessages();
       
+      // Send message through WebSocket
       if (ws.current) ws.current.send(inputMessage);
     } catch (error) {
       console.error('Error sending message:', error);
     }
   };
 
+  // Render the chat interface on the screen
   return (
     <div className="flex flex-col h-screen bg-gray-100">
+      {/* Message list */}
       <div className="flex-grow overflow-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
@@ -91,6 +117,7 @@ export default function Chat() {
         ))}
         <div ref={messagesEndRef} />
       </div>
+      {/* Message input form  */}
       <form onSubmit={sendMessage} className="p-4 bg-white border-t">
         <div className="flex space-x-2">
           <input
@@ -111,3 +138,12 @@ export default function Chat() {
     </div>
   );
 }
+
+
+// Hey Nick
+// Quick Breif description for the component:
+// This React component implements a real-time chat interface using WebSocket for live updates.
+// It fetches and displays messages, allows sending new messages, and automatically scrolls to the latest message.
+// The component uses React hooks (useState, useEffect, useRef) for state management and side effects.
+// It also implements a responsive design using Tailwind CSS classes for a modern look and feel.
+// The code demonstrates proficiency in React, asynchronous JavaScript, WebSocket implementation, and UI design.
