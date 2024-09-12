@@ -12,29 +12,30 @@ interface Message {
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [threadId, setThreadId] = useState(1); // Assume we're using thread ID 1
+  const [threadId] = useState(1); // Assume we're using thread ID 1
   const ws = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchMessages();
-    // Initialize WebSocket connection
-    ws.current = new WebSocket('ws://localhost:8000/ws');
-    ws.current.onmessage = (event) => {
-      console.log('Message from server:', event.data);
-      fetchMessages(); // Fetch messages when we receive a WebSocket message
-    };
+    initializeWebSocket();
 
     return () => {
-      if (ws.current) {
-        ws.current.close();
-      }
+      if (ws.current) ws.current.close();
     };
   }, [threadId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const initializeWebSocket = () => {
+    ws.current = new WebSocket('ws://localhost:8000/ws');
+    ws.current.onmessage = (event) => {
+      console.log('Message from server:', event.data);
+      fetchMessages();
+    };
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -55,21 +56,15 @@ export default function Chat() {
     if (!inputMessage.trim()) return;
 
     try {
-      const response = await fetch('http://localhost:8000/messages', {
+      await fetch('http://localhost:8000/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: inputMessage, thread_id: threadId }),
       });
-      await response.json();
       setInputMessage('');
-      fetchMessages(); // Fetch messages to update the chat
+      fetchMessages();
       
-      // Send message through WebSocket
-      if (ws.current) {
-        ws.current.send(inputMessage);
-      }
+      if (ws.current) ws.current.send(inputMessage);
     } catch (error) {
       console.error('Error sending message:', error);
     }
