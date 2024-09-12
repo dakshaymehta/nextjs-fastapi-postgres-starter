@@ -1,14 +1,31 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
-
+from dotenv import load_dotenv
 from models import Base
 
-_main_uri = "postgres:postgres@localhost:5432/postgres"
-_sync_uri = f"postgresql://{_main_uri}"
-_async_uri = f"postgresql+asyncpg://{_main_uri}"
+# Load environment variables
+load_dotenv()
 
-sync_engine = create_engine(_sync_uri)
+# Get the DATABASE_URL from the environment variable
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-Base.metadata.create_all(sync_engine)
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
-engine = create_async_engine(_async_uri)
+# Create synchronous engine
+sync_engine = create_engine(DATABASE_URL)
+
+def reset_database():
+    # Drop all tables
+    Base.metadata.drop_all(bind=sync_engine)
+    print("All tables dropped.")
+    
+    # Create all tables
+    Base.metadata.create_all(bind=sync_engine)
+    print("Database tables created successfully")
+
+# Create asynchronous engine
+async_engine = create_async_engine(DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"))
+
+print(f"Database engines created for URL: {DATABASE_URL}")

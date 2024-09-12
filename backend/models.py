@@ -1,18 +1,31 @@
-from sqlalchemy import String
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from sqlalchemy.ext.declarative import declarative_base
 
-
-class Base(DeclarativeBase):
-    pass
-
+Base = declarative_base()
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(30))
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    messages = relationship("Message", back_populates="user")
 
-    def __repr__(self) -> str:
-        return f"User(id={self.id!r}, name={self.name!r}"
+class Thread(Base):
+    __tablename__ = "threads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    messages = relationship("Message", back_populates="thread")
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(String)
+    is_user = Column(Boolean, default=True)
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id"))
+    thread_id = Column(Integer, ForeignKey("threads.id"))
+    user = relationship("User", back_populates="messages")
+    thread = relationship("Thread", back_populates="messages")
