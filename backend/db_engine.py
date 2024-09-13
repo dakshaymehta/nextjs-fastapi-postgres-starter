@@ -11,7 +11,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
 
-# Create synchronous engine
+
 sync_engine = create_engine(DATABASE_URL)
 
 
@@ -35,4 +35,4 @@ async_engine = create_async_engine(DATABASE_URL.replace(
 print(f"Database engines created for URL: {DATABASE_URL}")
 
 
-# Note: replace 'postgresql://' with 'postgresql+asyncpg://' to use the asyncpg driver for async operations.
+

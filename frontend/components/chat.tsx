@@ -33,7 +33,7 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // We used useEffect here for a few important reasons here:
+  // I used useEffect here for a few important reasons here:
   // 1. Side Effect: Scrolling is a side effect that affects something outside
   //    of the component's state (the DOM), which is exactly what useEffect is for.
   // 2. Dependency on State: We want to scroll when the messages change, so we
